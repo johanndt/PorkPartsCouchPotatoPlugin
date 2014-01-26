@@ -14,7 +14,7 @@ class TehConnection(TorrentProvider):
     urls = {
         'test': 'https://tehconnection.eu/',
         'login': 'https://tehconnection.eu/login.php',
-        'login_check': 'https://tehconnection.eu/inbox.php',
+        'login_check': 'https://tehconnection.eu/index.php',
         'detail': 'https://tehconnection.eu/details?id=%s',
         'search': 'https://tehconnection.eu/torrents.php?action=advanced&%s',
         'download': 'https://tehconnection.eu%s',
@@ -23,6 +23,11 @@ class TehConnection(TorrentProvider):
     http_time_between_calls = 1 #seconds
 
     def _search(self, movie, quality, results):
+
+        # need to try logging in before every search
+        if not '/logout.php' in self.urlopen(self.urls['login'], data = self.getLoginParams()).lower():
+            log.info('problems logging into tehconnection.eu')
+            return []
 
         data = self.getHTMLData(self.urls['search'] % tryUrlencode({'torrentname': '%s' % movie['library']['identifier'],'order_by': 's3'}))
         if data:
@@ -59,4 +64,4 @@ class TehConnection(TorrentProvider):
         }
 
     def loginSuccess(self, output):
-        return ('/login.php' not in output.lower())
+        return True
