@@ -1,7 +1,7 @@
 TehConnectionCouchPotatoPlugin
 ==============================
 
-A plugin used to add tehconnection.eu to the Couch Potato torrent providers list.
+A plugin used to add tehconnection.eu to the CouchPotato torrent providers list.
 
 
 How-to install
