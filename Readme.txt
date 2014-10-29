@@ -4,7 +4,7 @@ TehConnectionCouchPotatoPlugin
 A plugin to add tehconnection.eu to the CouchPotato torrent providers list.
 
 
-How-to install
+How to install
 ===========
 Make an folder named tehconnection in your custom_plugins folder which is is located within your config folder. From CouchPotato goto Settings->About->Directories (second folder is your config folder) for location. Place the readme.txt, init.py and main.py files inside the tehconnection folder.
 
