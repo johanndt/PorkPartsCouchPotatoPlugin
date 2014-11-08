@@ -29,7 +29,7 @@ class TehConnection(TorrentProvider, MovieProvider):
         'baseurl': 'https://tehconnection.eu',
         'login': 'https://tehconnection.eu/login.php',
         'login_check': 'https://tehconnection.eu/index.php',
-        'search': 'https://tehconnection.eu/torrents.php?searchstr=%s',
+        'search': 'https://tehconnection.eu/torrents.php?searchstr=%s&action=basic',
     }
 
     http_time_between_calls = 1 #seconds
@@ -115,6 +115,7 @@ class TehConnection(TorrentProvider, MovieProvider):
                     if qualityenc is None:
                         torrentData.qualityEncode = False
                     else:
+                        torrentData.torrentName += " HQ"
                         torrentData.qualityEncode = True
 
                     #Test if the Freelech or Verified boxes have been checked & add depending
