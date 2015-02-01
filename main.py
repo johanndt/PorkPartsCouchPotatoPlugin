@@ -6,47 +6,52 @@ from couchpotato.core.media._base.providers.torrent.base import TorrentProvider
 from couchpotato.core.media.movie.providers.base import MovieProvider
 import traceback
 import re
+import time
 
 log = CPLog(__name__)
 
 class TorrentDetails(object):
 
-   def __init__(self, seeders, leechers, permalink, downlink, torrentID, torrentName, filesize, freeleech, qualityEncode):
-      self.seeders = seeders
-      self.leechers = leechers
-      self.permalink = permalink
-      self.downlink = downlink
-      self.torrentID = torrentID
-      self.torrentName = torrentName
-      self.filesize = filesize
-      self.freeleech = freeleech
-      self.qualityEncode = qualityEncode
+    def __init__(self, seeders, leechers, permalink, downlink, torrentID, torrentName, filesize, freeleech, qualityEncode, torrentScore, datetorrentadded):
+        self.seeders = seeders
+        self.leechers = leechers
+        self.permalink = permalink
+        self.downlink = downlink
+        self.torrentID = torrentID
+        self.torrentName = torrentName
+        self.filesize = filesize
+        self.freeleech = freeleech
+        self.qualityEncode = qualityEncode
+        self.torrentScore = torrentScore
+        self.datetorrentadded = datetorrentadded
+
 
 
 class TehConnection(TorrentProvider, MovieProvider):
 
     urls = {
-        'baseurl': 'https://tehconnection.eu',
-        'login': 'https://tehconnection.eu/login.php',
-        'login_check': 'https://tehconnection.eu/index.php',
-        'search': 'https://tehconnection.eu/torrents.php?searchstr=%s&action=basic',
+            'baseurl': 'https://tehconnection.eu',
+            'login': 'https://tehconnection.eu/login.php',
+            'login_check': 'https://tehconnection.eu/index.php',
+            'search': 'https://tehconnection.eu/torrents.php?searchstr=%s&action=basic',
     }
 
-    http_time_between_calls = 1 #seconds
+    http_time_between_calls = 2 #seconds
 
     def _searchOnTitle(self, title, movie, quality, results):
 
         torrentlist = []
 
         if self.conf('only_freeleech'):
-            onlyFreelech = True
+            onlyfreeleech = True
         else:
-            onlyFreelech = False
+            onlyfreeleech = False
 
         if self.conf('only_verified'):
             onlyVerified = True
         else:
             onlyVerified = False
+
 
         if not '/logout.php' in self.urlopen(self.urls['login'], data = self.getLoginParams()).lower():
             log.info('problems logging into tehconnection.eu')
@@ -68,7 +73,7 @@ class TehConnection(TorrentProvider, MovieProvider):
                 items = soup.findAll("div", { "class" : "torrent_widget box pad" })
                 for item in items:
 
-                    torrentData = TorrentDetails(0, 0, '', '', 0, '', '', False, False)
+                    torrentData = TorrentDetails(0, 0, '', '', 0, '', '', False, False, 0, 0)
 
 
                     detailstats = item.find("div", { "class" : "details_stats" })
@@ -117,13 +122,34 @@ class TehConnection(TorrentProvider, MovieProvider):
                         torrentData.torrentName += " HQ"
                         torrentData.qualityEncode = True
 
+                    #TorrentScore
+                    torrscore = 0
+                    if torrentData.qualityEncode == True:
+                        torrscore += self.conf('extrascore_qualityencode')
+                    if torrentData.freeleech == True:
+                        torrscore += self.conf('extrascore_freelech')
+                    torrentData.torrentScore = torrscore
+
+                    #datetorrentadded
+                    try:
+                        addeddata = item.find("div", { "class" : "details" })
+                        addedparagraphdata = addeddata.find("p", { "style" : "float: left" })
+                        dateaddedstr = (addedparagraphdata.find('span')['title']).strip()
+                        addeddatetuple = time.strptime(dateaddedstr, '%b %d %Y, %H:%M')
+                        torrentData.datetorrentadded = int(time.mktime(addeddatetuple))
+                    except:
+                        log.error('Unable to convert datetime from %s: %s', (self.getName(), traceback.format_exc()))
+                        torrentData.datetorrentadded = 0
+
                     #Test if the Freelech or Verified boxes have been checked & add depending
-                    if (onlyFreelech == False) or (onlyFreelech == True and torrentData.freeleech == True):
-                        #Only Freelech is switched off OR only Freelech is ON and the torrent is a freelech, so safe to add to results
+                    if (onlyfreeleech == False) or (onlyfreeleech == True and torrentData.freeleech == True):
+                        #Only Freelech is switched off OR only Freelech is ON and the torrent is a freeleech, so safe to add to results
                         if (onlyVerified == False) or (onlyVerified == True and torrentData.qualityEncode == True):
                             #Only Verified is switched off OR only Verified is ON and the torrent is verified, so safe to add to results
                             torrentlist.append(torrentData)
 
+
+                log.info('Number of torrents found from TehConnection = ' + str(len(torrentlist)))
 
                 for torrentFind in torrentlist:
                     log.info('TehConnection found ' + torrentFind.torrentName)
@@ -134,7 +160,9 @@ class TehConnection(TorrentProvider, MovieProvider):
                         'url': torrentFind.downlink,
                         'detail_url': torrentFind.permalink,
                         'id': torrentFind.torrentID,
-                        'size': self.parseSize(torrentFind.filesize)
+                        'size': self.parseSize(torrentFind.filesize),
+                        'score': torrentFind.torrentScore,
+                        'date': torrentFind.datetorrentadded
                     })
 
             except:
@@ -150,4 +178,3 @@ class TehConnection(TorrentProvider, MovieProvider):
 
     def loginSuccess(self, output):
         return True
-
