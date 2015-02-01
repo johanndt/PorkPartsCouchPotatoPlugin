@@ -42,19 +42,35 @@ config = [{
                     'default': 96,
                     'description': 'Will not be (re)moved until this seed time (in hours) is met.',
                 },
-                                {
-                    'name': 'only_freeleech',
-                    'label': 'Freeleech',
-                    'default': False,
-                    'type': 'bool',
-                    'description': 'Only search for [FreeLeech] torrents.',
+                {
+                    'name': 'extrascore_qualityencode',
+                    'advanced': True,
+                    'label': 'Quality Encode Extra',
+                    'type': 'int',
+                    'default': 0,
+                    'description': 'Favours verified [Quality Encode] releases by giving them extra score eg.5000'
+                },
+                {
+                    'name': 'extrascore_freelech',
+                    'advanced': True,
+                    'label': 'Freeleech Extra',
+                    'type': 'int',
+                    'default': 0,
+                    'description': 'Favours [FreeLeech] releases by giving them extra score eg.1000'
                 },
                 {
                     'name': 'only_verified',
-                    'label': 'Verified',
+                    'label': 'Quality Encode Only',
                     'default': False,
                     'type': 'bool',
                     'description': 'Only search for verified [Quality Encode] torrents.',
+                },
+                {
+                    'name': 'only_freeleech',
+                    'label': 'Freeleech Only',
+                    'default': False,
+                    'type': 'bool',
+                    'description': 'Only search for [FreeLeech] torrents.',
                 },
                 {
                     'name': 'extra_score',
@@ -62,7 +78,7 @@ config = [{
                     'label': 'Extra Score',
                     'type': 'int',
                     'default': 20,
-                    'description': 'Starting score for each release found via this provider.',
+                    'description': 'Starting score for releases found from TehConnection.',
                 }
             ],
         },
