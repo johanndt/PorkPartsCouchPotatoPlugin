@@ -48,7 +48,6 @@ class TehConnection(TorrentProvider, MovieProvider):
         else:
             onlyVerified = False
 
-
         if not '/logout.php' in self.urlopen(self.urls['login'], data = self.getLoginParams()).lower():
             log.info('problems logging into tehconnection.eu')
             return []
@@ -144,9 +143,9 @@ class TehConnection(TorrentProvider, MovieProvider):
 
     def getLoginParams(self):
         return {
-            'username': self.conf('username'),
-            'password': self.conf('password'),
-            'submit': 'Log In!',
+            'username': str(self.conf('username')),
+            'password': str(self.conf('password')),
+            'login': 'Log In!',
         }
 
     def loginSuccess(self, output):
