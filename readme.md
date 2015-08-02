@@ -16,8 +16,8 @@ How To Install
 
 ######Option 2 (Requires Git)
   - From CouchPotato go to Settings->About->Directories and the second folder is the location of your data folder.
-  - In your data folder there will be a custom\_plugins folder. Create a new folder in the custom\_ plugins folder called tehconnection
-  - Open a terminal at the tehconnection folder. Run `git clone https://github.com/flightlevel/TehConnectionCouchPotatoPlugin.git .` *Note the space and dot after .git in the command
+  - In your data folder there will be a custom\_plugins folder. Open a terminal at the custom\_plugins folder.
+  - From the custom\_plugins folder run `git clone https://github.com/flightlevel/TehConnectionCouchPotatoPlugin.git tehconnection`
   - If you ever need to update, you can simply run `git pull` from the tehconnection folder.
   - Restart CouchPotato.
 
