@@ -28,15 +28,22 @@ class TorrentDetails(object):
         self.ageindays = ageindays
 
 
-class TehConnection(TorrentProvider, MovieProvider):
-    urls = {
-        'baseurl': 'https://tehconnection.eu',
-        'login': 'https://tehconnection.eu/login.php',
-        'login_check': 'https://tehconnection.eu/index.php',
-        'search': 'https://tehconnection.eu/torrents.php?searchstr=%s&action=basic',
-    }
+class PorkParts(TorrentProvider, MovieProvider):
 
     http_time_between_calls = 2  # seconds
+
+    def __init__(self):
+
+        super(PorkParts, self).__init__()
+
+        _BASE_URL = self.conf('base_url')
+        self.urls = {
+            'baseurl': _BASE_URL,
+            'login': '{0}/login.php'.format(_BASE_URL),
+            'login_check': '{0}/index.php'.format(_BASE_URL),
+            'search': '{0}/torrents.php?searchstr=%s&action=basic&filter_cat[9]=1'.format(_BASE_URL),
+        }
+
 
     def _searchOnTitle(self, title, movie, quality, results):
 
@@ -53,43 +60,47 @@ class TehConnection(TorrentProvider, MovieProvider):
             onlyverified = False
 
         if not '/logout.php' in self.urlopen(self.urls['login'], data=self.getLoginParams()).lower():
-            log.info('problems logging into tehconnection.eu')
+            log.info('problems logging in')
             return []
 
         data = self.getHTMLData(self.urls['search'] % tryUrlencode(getIdentifier(movie)))
         if data:
             try:
-                resultstable = BeautifulSoup(data).find('table', attrs={'id': 'browse_torrent_table'})
+                resultstable = BeautifulSoup(data).find('table', attrs={'id': 'torrent_table'})
                 if resultstable is None:
-                    log.info('movie not found on TehConnection')
+                    log.info('movie not found')
                     return []
 
-                pagelinkdata = resultstable.find("a", {"title": "View Torrent"})
-                torrentpage = (pagelinkdata.attrs['href']).strip()
-                indivtorrdata = self.getHTMLData(self.urls['baseurl'] + torrentpage)
+                #pagelinkdata = resultstable.find("a", {"title": "View Torrent"})
+                #torrentpage = (pagelinkdata.attrs['href']).strip()
+                #indivtorrdata = self.getHTMLData(self.urls['baseurl'] + torrentpage)
 
-                soup = BeautifulSoup(indivtorrdata)
-                items = soup.findAll("div", {"class": "torrent_widget box pad"})
+                #soup = BeautifulSoup(indivtorrdata)
+                #items = soup.findAll("div", {"class": "torrent_widget box pad"})
+
+                items = resultstable.findAll("tr", {"class": "torrent"})
                 for item in items:
 
                     torrentdata = TorrentDetails(0, 0, '', '', 0, '', '', False, False, 0, 0, 0)
 
-                    detailstats = item.find("div", {"class": "details_stats"})
+                    columns = item.findAll('td')
+
+                    #detailstats = item.find("div", {"class": "details_stats"})
 
                     # seeders
-                    seed = detailstats.find("img", {"title": "Seeders"}).parent
+                    seed = columns[7] #detailstats.find("img", {"title": "Seeders"}).parent
                     torrentdata.seeders = (seed.text.strip())
 
                     # leechers
-                    leech = detailstats.find("img", {"title": "Leechers"}).parent
+                    leech = columns[8] #detailstats.find("img", {"title": "Leechers"}).parent
                     torrentdata.leechers = (leech.text.strip())
 
                     #permalink
-                    perma = detailstats.find("a", {"title": "Permalink"})
+                    perma = item.find("a", {"title": "View Torrent"}) #detailstats.find("a", {"title": "Permalink"})
                     torrentdata.permalink = self.urls['baseurl'] + perma.attrs['href']
 
                     #download link
-                    downlo = detailstats.find("a", {"title": "Download"})
+                    downlo = item.find("a", {"title": "Download"})
                     torrentdata.downlink = self.urls['baseurl'] + downlo.attrs['href']
 
                     #Torrent ID
@@ -97,28 +108,28 @@ class TehConnection(TorrentProvider, MovieProvider):
                     torrentdata.torrentid = (int(m.group()) if m else None)
 
                     #torrentname
-                    namedata = item.find("div", {"id": "desc_%s" % torrentdata.torrentid})
-                    torrentdata.torrentname = (namedata.text.splitlines()[1]).strip()
+                    #namedata = item.find("div", {"id": "desc_%s" % torrentdata.torrentid})
+                    torrentdata.torrentname = perma.text.strip()
 
                     #FileSize
-                    sizedata = item.find("div", {"class": "details_title"})
-                    sizefile = (sizedata.text.splitlines()[3]).replace("(", "").replace(")", "").strip()
+                    sizedata = columns[4] #item.find("div", {"class": "details_title"})
+                    sizefile = sizedata.text.strip() #(sizedata.text.splitlines()[3]).replace("(", "").replace(")", "").strip()
                     torrentdata.filesize = sizefile
 
                     #FreeLeech
-                    freeleechdata = item.find("span", {"class": "freeleech"})
-                    if freeleechdata is None:
-                        torrentdata.freeleech = False
-                    else:
-                        torrentdata.freeleech = True
+                    #freeleechdata = item.find("span", {"class": "freeleech"})
+                    #if freeleechdata is None:
+                    #    torrentdata.freeleech = False
+                    #else:
+                    #    torrentdata.freeleech = True
+                    torrentdata.freeleech = "[Freeleech!]" in columns[1].text
 
                     #QualityEncode
-                    qualityenc = detailstats.find("img", {"class": "approved"})
-                    if qualityenc is None:
-                        torrentdata.qualityencode = False
-                    else:
+                    if "BluRay" in columns[1].text or "DVDRip" in columns[1].text:
                         torrentdata.torrentname += " HQ"
                         torrentdata.qualityencode = True
+                    else:
+                        torrentdata.qualityencode = False
 
                     #TorrentScore
                     torrscore = 0
@@ -129,18 +140,18 @@ class TehConnection(TorrentProvider, MovieProvider):
                     torrentdata.torrentscore = torrscore
 
                     #datetorrentadded
-                    try:
-                        addeddata = item.find("div", {"class": "details"})
-                        addedparagraphdata = addeddata.find("p", {"style": "float: left"})
-                        dateaddedstr = (addedparagraphdata.find('span')['title']).strip()
-                        addeddatetuple = time.strptime(dateaddedstr, '%b %d %Y, %H:%M')
-                        torrentdata.datetorrentadded = int(time.mktime(addeddatetuple))
-                    except:
-                        log.error('Unable to convert datetime from %s: %s', (self.getName(), traceback.format_exc()))
-                        torrentdata.datetorrentadded = 0
+                    #try:
+                    #    addeddata = item.find("div", {"class": "details"})
+                    #    addedparagraphdata = addeddata.find("p", {"style": "float: left"})
+                    #    dateaddedstr = (addedparagraphdata.find('span')['title']).strip()
+                    #    addeddatetuple = time.strptime(dateaddedstr, '%b %d %Y, %H:%M')
+                    #    torrentdata.datetorrentadded = int(time.mktime(addeddatetuple))
+                    #except:
+                    #    log.error('Unable to convert datetime from %s: %s', (self.getName(), traceback.format_exc()))
+                    #    torrentdata.datetorrentadded = 0
 
                     #ageindays
-                    torrentdata.ageindays = int((time.time() - torrentdata.datetorrentadded) / 24 / 60 / 60)
+                    #torrentdata.ageindays = int((time.time() - torrentdata.datetorrentadded) / 24 / 60 / 60)
 
                     #Test if the Freelech or Verified boxes have been checked & add depending
                     if (onlyfreeleech is False) or (onlyfreeleech is True and torrentdata.freeleech is True):
@@ -151,10 +162,10 @@ class TehConnection(TorrentProvider, MovieProvider):
                             # so safe to add to results
                             torrentlist.append(torrentdata)
 
-                log.info('Number of torrents found from TehConnection = ' + str(len(torrentlist)))
+                log.info('Number of torrents found = ' + str(len(torrentlist)))
 
                 for torrentfind in torrentlist:
-                    log.info('TehConnection found ' + torrentfind.torrentname)
+                    log.info('PorkParts found ' + torrentfind.torrentname)
                     results.append({
                         'leechers': torrentfind.leechers,
                         'seeders': torrentfind.seeders,

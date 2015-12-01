@@ -6,13 +6,13 @@ def autoload():
 
 
 config = [{
-              'name': 'tehconnection',
+              'name': 'porkparts',
               'groups': [
                   {
                       'tab': 'searcher',
                       'list': 'torrent_providers',
-                      'name': 'TehConnection',
-                      'description': 'See <a href="https://tehconnection.eu/">TehConnection</a>',
+                      'name': 'PorkParts',
+                      'description': 'A generic Gazelle provider.',
                       'wizard': True,
                       'icon': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAABe0lEQVQ4y3XTvWsVQRQF8N/uSxQJGiJi2EqtTKesQbSwEbQX0UILC8XGwsImjZWdSZkmkqQU/AsEDfgBVsII2gt2gkHQQk3i201zJ0weyYFlmdl77pxz9k7Vtq1AHc//vJFSAkUNDNCjgyo+DmKjxzhmcAkTQdrCR3zCn6JRNxanDtHgPu7glL2xjhdYwhfUWcEtLGIqCn/gNb6GquO4ihNx4Aae4skYFvAoiG8wj3f4G+SMAziLh7iBx7hQYw3f8QCX8TJ8HsJ0WDuMzcjhNq7hG1azhQn8iyxORxbXg9zjdzR+hg+ocBAbg6Zp6vgDQ9wM+RcxGel3OIIzuBt23mZ7mZy9rkdAr3AlFEzjPFbC2ucil64qBqWKRg1+Ff+7HKBJ/CwHrWxQKqqj4TDeVbHONTuEEl0xlUfxHO9xLsiDkryjIKMY6yGWo3gNc5iNdZVS6vdTMIq+PHEvVKMbbdvmMI9F8idxL4aoTil1+zYYubZZ4a4rnr1nbAOC0myw9QGJWAAAAABJRU5ErkJggg==',
                       'options': [
@@ -20,6 +20,11 @@ config = [{
                               'name': 'enabled',
                               'type': 'enabler',
                               'default': False,
+                          },
+                          {
+                              'name': 'base_url',
+                              'default': 'https://example.domain.com',
+                              'description': 'The URL to a Gazelle tracker, including protocol, and no trailing slashes. eg https://domain.com',
                           },
                           {
                               'name': 'username',
@@ -80,7 +85,7 @@ config = [{
                               'label': 'Extra Score',
                               'type': 'int',
                               'default': 20,
-                              'description': 'Starting score for releases found from TehConnection.',
+                              'description': 'Starting score for releases found.',
                           }
                       ],
                   },
